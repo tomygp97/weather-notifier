@@ -19,8 +19,15 @@ func LoadConfig() *Config {
 	}
 
 	return &Config{
-		Port:      os.Getenv("PORT"),
-		MysqlDSN:  os.Getenv("MYSQL_DSN"),
-		RedisAddr: os.Getenv("REDIS_ADDR"),
+		Port:      getEnv("PORT", "8080"),
+		MysqlDSN:  getEnv("MYSQL_DSN", "root:@tcp(localhost:3306)/weather_notifier?parseTime=true"),
+		RedisAddr: getEnv("REDIS_ADDR", "localhost:6379"),
 	}
+}
+
+func getEnv(key, defaultValue string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultValue
 }

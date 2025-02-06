@@ -3,20 +3,36 @@ package infrastructure
 import (
 	"context"
 	"log"
+	"time"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/redis/go-redis/v9"
 )
 
-func NewRedis(addr string) *redis.Client {
-	rdb := redis.NewClient(&redis.Options{
-		Addr: addr,
+var RedisClient *redis.Client
+
+func InitRedis() {
+	RedisClient = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379", // Cambiar si es necesario
+		Password: "",               // Si tiene contraseña, agregar aquí
+		DB:       0,                // Usar la DB 0
 	})
 
-	if err := rdb.Ping(context.Background()).Err(); err != nil {
-		log.Fatal("⚠️ No se pudo conectar a Redis: ", err)
-	} else {
-		log.Println("✅ Conectado a Redis")
+	_, err := RedisClient.Ping(context.Background()).Result()
+	if err != nil {
+		log.Fatalf("Error conectando a Redis: %v", err)
 	}
 
-	return rdb
+	log.Println("✅ Redis conectado correctamente")
+}
+
+// Guardar en Redis con expiración
+func SetCache(key string, value string, duration time.Duration) error {
+	ctx := context.Background()
+	return RedisClient.Set(ctx, key, value, duration).Err()
+}
+
+// Obtener de Redis
+func GetCache(key string) (string, error) {
+	ctx := context.Background()
+	return RedisClient.Get(ctx, key).Result()
 }
